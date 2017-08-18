@@ -7,7 +7,7 @@ uses
   FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.MySQL,
   FireDAC.Phys.MySQLDef, Data.DB, FireDAC.Comp.Client, FireDAC.VCLUI.Wait,
-  FireDAC.Comp.UI;
+  FireDAC.Comp.UI, uDbConfig;
 
 type
   TdmBase = class(TDataModule)
@@ -22,6 +22,14 @@ type
     procedure commit();
     procedure rollback();
     function executeSql(const sql: string): LongInt;
+    function Connection(const S: string; const bSuccess: boolean=false;
+      const bError: boolean=true): boolean;
+    procedure saveConnection();
+    procedure SaveConfig(const cfg: TDbConfig);
+    procedure LoadConfig(var cfg: TDbConfig);
+    procedure loadConnection();
+    function getPath(): string;
+    function getDbFile(): string;
   end;
 
 var
@@ -29,7 +37,7 @@ var
 
 implementation
 
-uses Forms, variants;
+uses Forms, variants, Windows;
 
 {$R *.dfm}
 
@@ -39,16 +47,54 @@ begin
 end;
 
 procedure TdmBase.DataModuleCreate(Sender: TObject);
-//var S: string;
 begin
-  //S := ExtractFilePath(Application.ExeName) + 'ul_data\';
-  //TCDSFileOper.openFile(cds_org, S + 'cpu_org_url.txt');
+  loadConnection();
+end;
+
+function TdmBase.Connection(const S: string; const bSuccess, bError: boolean): boolean;
+begin
+  FDConnection1.Params.Text := S;
   FDConnection1.Connected := true;
+  Result := FDConnection1.Connected;
+  if (Result) then begin
+    if bSuccess then begin
+      MessageBox(0, '连接成功', '提示', MB_ICONINFORMATION+MB_OK);
+    end;
+  end else begin
+    if bError then begin
+      MessageBox(0, '连接失败', '警告', MB_ICONEXCLAMATION);
+    end;
+  end;
+end;
+
+procedure TdmBase.SaveConfig(const cfg: TDbConfig);
+begin
+  FDConnection1.Params.Text := cfg.toConfig;
+  saveConnection;
+end;
+
+procedure TdmBase.LoadConfig(var cfg: TDbConfig);
+begin
+  cfg.fromStrs(FDConnection1.Params);
 end;
 
 procedure TdmBase.rollback;
 begin
   self.FDConnection1.rollback;
+end;
+
+procedure TdmBase.saveConnection;
+begin
+  FDConnection1.Params.SaveToFile(getDbFile);
+end;
+
+procedure TdmBase.loadConnection;
+begin
+  if FileExists(getDbFile) then begin
+    FDConnection1.Params.LoadFromFile(getDbFile);
+  end else begin
+    FDConnection1.Params.Text := TDbConfig.getDefault;
+  end;
 end;
 
 procedure TdmBase.startTransaction;
@@ -59,6 +105,16 @@ end;
 function TDmBase.executeSql(const sql: string): LongInt;
 begin
   Result := FDConnection1.ExecSQL(sql);
+end;
+
+function TdmBase.getDbFile: string;
+begin
+  Result := getPath() + 'db.conf';
+end;
+
+function TdmBase.getPath: string;
+begin
+  Result := ExtractFilePath(Application.ExeName);
 end;
 
 {

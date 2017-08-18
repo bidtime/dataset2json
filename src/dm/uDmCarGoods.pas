@@ -46,8 +46,7 @@ end;
 procedure TdmCarGoods.openSql(const S: string);
 begin
   self.FDQuery1.Close;
-  self.FDQuery1.SQL.Text := S;
-  self.FDQuery1.Open;
+  self.FDQuery1.Open(S);
 end;
 
 procedure TdmCarGoods.rollback;

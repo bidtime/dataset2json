@@ -2,18 +2,18 @@ program dataset2json;
 
 uses
   Vcl.Forms,
-  uDmCarGoods in 'src\dm\uDmCarGoods.pas' {dmCarGoods: TDataModule},
   uDmBase in 'src\dm\uDmBase.pas' {dmBase: TDataModule},
-  uFrmMain in 'src\uFrmMain.pas' {frmMain};
+  uDmCarGoods in 'src\dm\uDmCarGoods.pas' {dmCarGoods: TDataModule},
+  uFrmMain in 'src\uFrmMain.pas' {frmMain},
+  uDbConfig in 'src\dm\uDbConfig.pas';
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TfrmMain, frmMain);
-  Application.CreateForm(TdmCarGoods, dmCarGoods);
   Application.CreateForm(TdmBase, dmBase);
+  Application.CreateForm(TdmCarGoods, dmCarGoods);
   Application.CreateForm(TfrmMain, frmMain);
   Application.Run;
 end.
