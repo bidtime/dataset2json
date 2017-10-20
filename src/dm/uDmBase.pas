@@ -16,6 +16,10 @@ type
     procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }
+    procedure saveConnection();
+    procedure loadConnection();
+    function getPath(): string;
+    function getDbFile(): string;
   public
     { Public declarations }
     procedure startTransaction();
@@ -24,12 +28,9 @@ type
     function executeSql(const sql: string): LongInt;
     function Connection(const S: string; const bSuccess: boolean=false;
       const bError: boolean=true): boolean;
-    procedure saveConnection();
-    procedure SaveConfig(const cfg: TDbConfig);
+    procedure SaveConfig(const cfg: TDbConfig; const bSuccess: boolean=true;
+      const bError: boolean=true);
     procedure LoadConfig(var cfg: TDbConfig);
-    procedure loadConnection();
-    function getPath(): string;
-    function getDbFile(): string;
   end;
 
 var
@@ -67,10 +68,20 @@ begin
   end;
 end;
 
-procedure TdmBase.SaveConfig(const cfg: TDbConfig);
+procedure TdmBase.SaveConfig(const cfg: TDbConfig; const bSuccess, bError: boolean);
 begin
-  FDConnection1.Params.Text := cfg.toConfig;
-  saveConnection;
+  try
+    FDConnection1.Params.Text := cfg.toConfig;
+    saveConnection;
+    if bSuccess then begin
+      MessageBox(0, '保存成功', '提示', MB_ICONINFORMATION+MB_OK);
+    end;
+  Except on e:Exception do begin
+      if bError then begin
+        MessageBox(0, pchar('保存失败:' + e.Message), '警告', MB_ICONEXCLAMATION);
+      end;
+    end;
+  end;
 end;
 
 procedure TdmBase.LoadConfig(var cfg: TDbConfig);
