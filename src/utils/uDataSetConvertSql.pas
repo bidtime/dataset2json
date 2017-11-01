@@ -3,22 +3,23 @@ unit uDataSetConvertSql;
 interface
 
 uses
-  System.SysUtils, System.Classes, Data.DB;
+  System.SysUtils, System.Classes, Data.DB, uCommEvents;
 
 type
   TDataSetConvertSql = class
   private
     { Private declarations }
-    class procedure toSqlRaw(const dataSet: TDataSet; const useBatch: boolean; strs: TStrings; logs: TStrings);
   public
     { Public declarations }
-    class function convert(const dataSet: TDataSet; const useBatch: boolean; logs: TStrings = nil): string;
+    class procedure toSql(const dataSet: TDataSet; const useBatch: boolean; strs: TStrings; ev:TRowNextEvent=nil; logs: TStrings=nil);
+    class function convert(const dataSet: TDataSet; const useBatch: boolean; ev:TRowNextEvent=nil; logs: TStrings = nil): string; overload;
   end;
 
 implementation
 
+class procedure TDataSetConvertSql.toSql(const dataSet: TDataSet; const useBatch: boolean;
 
-class procedure TDataSetConvertSql.toSqlRaw(const dataSet: TDataSet; const useBatch: boolean; strs: TStrings; logs: TStrings);
+  strs: TStrings; ev:TRowNextEvent; logs: TStrings);
 
   {ftUnknown, ftString, ftSmallint, ftInteger, ftWord, // 0..4
   ftBoolean, ftFloat, ftCurrency, ftBCD, ftDate, ftTime, ftDateTime, // 5..11
@@ -139,6 +140,9 @@ class procedure TDataSetConvertSql.toSqlRaw(const dataSet: TDataSet; const useBa
           S := preText + rowToJson() + c;
         end;
         strs.add(S);
+        if Assigned(ev) then begin
+          ev(dataSet, useBatch, strs);
+        end;
         dataSet.Next;
       end;
     finally
@@ -163,7 +167,7 @@ begin
   end;
 end;
 
-class function TDataSetConvertSql.convert(const dataSet: TDataSet; const useBatch: boolean; logs: TStrings): string;
+class function TDataSetConvertSql.convert(const dataSet: TDataSet; const useBatch: boolean; ev:TRowNextEvent; logs: TStrings): string;
 var
   strs: TStrings;
 begin
@@ -172,7 +176,7 @@ begin
   end;
   strs := TStringList.Create;
   try
-    toSqlRaw(dataSet, useBatch, strs, logs);
+    toSql(dataSet, useBatch, strs, ev, logs);
     Result := strs.Text;
   finally
     strs.Free;

@@ -5,7 +5,10 @@ uses
   uDmBase in 'src\dm\uDmBase.pas' {dmBase: TDataModule},
   uDmCarGoods in 'src\dm\uDmCarGoods.pas' {dmCarGoods: TDataModule},
   uFrmMain in 'src\uFrmMain.pas' {frmMain},
-  uDbConfig in 'src\dm\uDbConfig.pas';
+  uDbConfig in 'src\dm\uDbConfig.pas',
+  uDataSetConvertJson in 'src\utils\uDataSetConvertJson.pas',
+  uDataSetConvertSql in 'src\utils\uDataSetConvertSql.pas',
+  uCommEvents in 'src\utils\uCommEvents.pas';
 
 {$R *.res}
 

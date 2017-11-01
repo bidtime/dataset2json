@@ -1,4 +1,4 @@
-unit uFrmMain;
+﻿unit uFrmMain;
 
 interface
 
@@ -56,6 +56,7 @@ type
     procedure ctrsToDbInfo(var u: TDbConfig);
     procedure dbTestOrSaveCfg(const bSave: boolean=false);
     function getPath: string;
+    procedure DbInfoDoAfter(const S: string);
   public
     { Public declarations }
   end;
@@ -110,6 +111,12 @@ begin
   end;
 end;
 
+procedure TfrmMain.DbInfoDoAfter(const S: string);
+begin
+  self.FDGUIxFormsMemo1.Lines.Add('----------');
+  self.FDGUIxFormsMemo1.Lines.Add(S);
+end;
+
 procedure TfrmMain.dbTestOrSaveCfg(const bSave: boolean);
 var u: TDbConfig;
 begin
@@ -122,9 +129,9 @@ begin
     Application.ProcessMessages;
     //
     if not bSave then begin
-      DmBase.Connection(u.toConfig, true, true);
+      DmBase.Connection(u.toConfig, DbInfoDoAfter);
     end else begin
-      DmBase.SaveConfig(u);
+      DmBase.SaveConfig(u, DbInfoDoAfter);
     end;
   finally
     u.Free;

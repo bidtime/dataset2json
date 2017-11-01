@@ -26,9 +26,13 @@ type
     procedure commit();
     procedure rollback();
     function executeSql(const sql: string): LongInt;
-    function Connection(const S: string; const bSuccess: boolean=false;
+    {function Connection(const S: string; const bSuccess: boolean=false;
+      const bError: boolean=true): boolean; overload;}
+    {function Connection(const S: string; const bSuccess: boolean=true;
+      const bError: boolean=true; ev: TGetStrProc=nil): boolean;}
+    function Connection(const S: string; ev: TGetStrProc=nil; const bSuccess: boolean=true;
       const bError: boolean=true): boolean;
-    procedure SaveConfig(const cfg: TDbConfig; const bSuccess: boolean=true;
+    procedure SaveConfig(const cfg: TDbConfig; ev: TGetStrProc=nil; const bSuccess: boolean=true;
       const bError: boolean=true);
     procedure LoadConfig(var cfg: TDbConfig);
   end;
@@ -47,12 +51,38 @@ begin
   FDConnection1.Commit;
 end;
 
+function TdmBase.Connection(const S: string; ev: TGetStrProc;
+  const bSuccess, bError: boolean): boolean;
+begin
+  Result := false;
+  FDConnection1.Params.Text := S;
+  try
+    FDConnection1.Connected := true;
+    //Result := FDConnection1.Connected;
+    if Assigned(ev) then begin
+      ev('连接成功');
+    end;
+    if bSuccess then begin
+      MessageBox(0, '连接成功', '提示', MB_ICONINFORMATION+MB_OK);
+    end;
+    Result := true;
+  Except on e:Exception do begin
+      if Assigned(ev) then begin
+        ev('连接失败:' + e.Message);
+      end;
+      if bError then begin
+        MessageBox(0, pchar('连接失败:' + e.Message), '警告', MB_ICONEXCLAMATION);
+      end;
+    end;
+  end;
+end;
+
 procedure TdmBase.DataModuleCreate(Sender: TObject);
 begin
   loadConnection();
 end;
 
-function TdmBase.Connection(const S: string; const bSuccess, bError: boolean): boolean;
+{function TdmBase.Connection(const S: string; const bSuccess, bError: boolean): boolean;
 begin
   FDConnection1.Params.Text := S;
   FDConnection1.Connected := true;
@@ -66,17 +96,24 @@ begin
       MessageBox(0, '连接失败', '警告', MB_ICONEXCLAMATION);
     end;
   end;
-end;
+end;}
 
-procedure TdmBase.SaveConfig(const cfg: TDbConfig; const bSuccess, bError: boolean);
+procedure TdmBase.SaveConfig(const cfg: TDbConfig; ev: TGetStrProc; const bSuccess, bError: boolean);
 begin
   try
     FDConnection1.Params.Text := cfg.toConfig;
     saveConnection;
+    if Assigned(ev) then begin
+      ev('保存成功');
+    end;
+
     if bSuccess then begin
       MessageBox(0, '保存成功', '提示', MB_ICONINFORMATION+MB_OK);
     end;
   Except on e:Exception do begin
+      if Assigned(ev) then begin
+        ev('保存失败:' + e.Message);
+      end;
       if bError then begin
         MessageBox(0, pchar('保存失败:' + e.Message), '警告', MB_ICONEXCLAMATION);
       end;
